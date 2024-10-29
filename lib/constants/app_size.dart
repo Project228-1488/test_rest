@@ -20,9 +20,9 @@ class AppSize {
   static double get kLargeHeight => 600.0.w;
 
 
-  static double get kSmallPadding => 8.0.w;
-  static double get kMediumPadding => 30.0.w;
-  static double get kLargePadding => 240.0.w;
+  static double get kSmallPadding => 10.0.w;
+  static double get kMediumPadding => 80.0.w;
+  static double get kLargePadding => 200.0.w;
 
 
   static double get kIconSmallSize => 24.0.w;
