@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:test_rest/bloc/rec_combo_bloc.dart';
 import 'package:test_rest/constants/app_colors.dart';
 import 'package:test_rest/constants/app_size.dart';
@@ -15,6 +16,15 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+  late TabController tabController;
+
+  String searchQuery = '';
+  List<RecCombo> filteredItems = [];
+
+  bool isLoading = true;
+
+  final List<String> categories = ['Hottest', 'Popular', 'New Combo', 'Top'];
+
   final List<RecCombo> items = [
     RecCombo(
       name: AppTexts.kCombo1,
@@ -27,13 +37,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       price: '8,000',
     ),
   ];
-
-  late TabController tabController;
-
-  final List<String> categories = ['Hottest', 'Popular', 'New Combo', 'Top'];
-
-  String searchQuery = '';
-  List<RecCombo> filteredItems = [];
 
   final Map<String, List<RecCombo>> categoryItems = {
     'Hottest': [
@@ -144,6 +147,58 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
+  void showSearchResultsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Center(
+              child: Text("Search Results",
+                  style: TextStyle(
+                      fontFamily: 'BrandonGrotesque',
+                      fontSize: AppSize.kFontBodyLargeSize,
+                      color: AppColors.kTextColor,
+                      fontWeight: FontWeight.bold))),
+          content: SizedBox(
+            width: 300,
+            height: 200,
+            child: BlocBuilder<RecComboBloc, RecComboState>(
+              builder: (context, state) {
+                if (state is RecCombosLoaded) {
+                  return ListView.builder(
+                    itemCount: state.items.length,
+                    itemBuilder: (context, index) {
+                      final item = state.items[index];
+                      return ListTile(
+                        leading:
+                            Image.asset(item.imagePath, width: 40, height: 40),
+                        title: Text(item.name),
+                        subtitle: Text(item.price),
+                      );
+                    },
+                  );
+                }
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
+          ),
+          actions: [
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Icon(Icons.close,
+                    color: AppColors.kTextColor,
+                    size: AppSize.kFontHeadlineLargeSize),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget buildCategoryTabs() {
     return TabBar(
       controller: tabController,
@@ -182,8 +237,36 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       Colors.orange.shade100,
     ];
 
+    if (isLoading) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(
+            items.length,
+            (index) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSize.kSmallPadding),
+              child: Shimmer(
+                duration: const Duration(seconds: 2),
+                color: Colors.grey.shade300,
+                enabled: isLoading,
+                child: Container(
+                  width: 140,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    color: colors[index % colors.length],
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(
         children: items.asMap().entries.map((entry) {
           int index = entry.key;
@@ -213,9 +296,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       ],
                     ),
                     SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: Image.asset(item.imagePath)),
+                      width: 60,
+                      height: 60,
+                      child: Image.asset(item.imagePath),
+                    ),
                     SizedBox(height: AppSize.kSmallPadding),
                     Text(
                       item.name,
@@ -276,7 +360,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          SizedBox(width: AppSize.kMediumPadding),
+          SizedBox(width: AppSize.kSmallPadding),
           const Icon(Icons.search, color: AppColors.kTextColor),
           SizedBox(width: AppSize.kSmallPadding),
           Expanded(
@@ -296,65 +380,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
               style: TextStyle(
                 fontFamily: 'BrandonGrotesque',
-                fontSize: AppSize.kFontBodyLargeSize,
+                fontSize: AppSize.kFontHeadlineMediumSize,
                 color: AppColors.kTextColor,
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  void showSearchResultsDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Center(
-              child: Text("Search Results",
-                  style: TextStyle(
-                      fontFamily: 'BrandonGrotesque',
-                      fontSize: AppSize.kFontBodyLargeSize,
-                      color: AppColors.kTextColor,
-                      fontWeight: FontWeight.bold))),
-          content: SizedBox(
-            width: 300,
-            height: 200,
-            child: BlocBuilder<RecComboBloc, RecComboState>(
-              builder: (context, state) {
-                if (state is RecCombosLoaded) {
-                  return ListView.builder(
-                    itemCount: state.items.length,
-                    itemBuilder: (context, index) {
-                      final item = state.items[index];
-                      return ListTile(
-                        leading:
-                            Image.asset(item.imagePath, width: 40, height: 40),
-                        title: Text(item.name),
-                        subtitle: Text(item.price),
-                      );
-                    },
-                  );
-                }
-                return const Center(child: CircularProgressIndicator());
-              },
-            ),
-          ),
-          actions: [
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Icon(Icons.close,
-                    color: AppColors.kTextColor,
-                    size: AppSize.kFontHeadlineLargeSize),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -401,6 +433,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       setState(() {});
     });
     filteredItems = items;
+
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        isLoading = false;
+      });
+    });
   }
 
   @override
@@ -449,14 +487,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       child: Container(
                           height: 42.0,
                           alignment: Alignment.center,
-                          child: const Column(
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.shopping_basket_outlined,
+                              const Icon(Icons.shopping_basket_outlined,
                                   color: Colors.orange),
                               Text(AppTexts.kBasket,
                                   style: TextStyle(
                                     fontFamily: 'BrandonGrotesque',
+                                    fontSize: AppSize.kFontHeadlineMediumSize,
                                   ))
                             ],
                           )),
@@ -492,7 +531,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   ],
                 ),
                 SizedBox(height: AppSize.kMediumPadding),
-                buildSearchField(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    buildSearchField(),
+                    const Icon(Icons.filter_alt_outlined,
+                        color: AppColors.kTextColor)
+                  ],
+                ),
                 SizedBox(height: AppSize.kMediumPadding),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,

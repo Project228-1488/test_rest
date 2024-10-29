@@ -4,7 +4,7 @@ class AppSize {
   AppSize._();
 
   static double get kFontHeadlineLargeSize => 70.0.sp;
-  static double get kFontHeadlineMediumSize => 35.0.sp;
+  static double get kFontHeadlineMediumSize => 32.0.sp;
   static double get kFontHeadlineSmallSize => 20.0.sp;
 
   static double get kFontBodyLargeSize => 52.0.sp;

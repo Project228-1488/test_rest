@@ -14,6 +14,7 @@ dependencies:
   flutter_screenutil:
   flutter_svg:
   equatable:
+  shimmer_animation:
 
 dev_dependencies:
   flutter_test:
